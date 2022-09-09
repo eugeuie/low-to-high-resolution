@@ -1,3 +1,11 @@
+# MODIS (available data)
+
+| Bands | Wavelength (micrometers) | Resolution (meters) |
+|-------|--------------------------|---------------------|
+| RED   | 0.62-0.67                | 230                 |
+| NIR   | 0.84-0.88                | 230                 |
+| SWIR  | 1.63-1.65                | 230                 |
+
 # Landsat 8
 
 > [https://www.usgs.gov/faqs/what-are-band-designations-landsat-satellites]:  
