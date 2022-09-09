@@ -2,7 +2,7 @@
 
 | Bands | Wavelength (micrometers) | Resolution (meters) |
 |-------|--------------------------|---------------------|
-| RED   | 0.62-0.67                | 230                 |
+| Red   | 0.62-0.67                | 230                 |
 | NIR   | 0.84-0.88                | 230                 |
 | SWIR  | 1.63-1.65                | 230                 |
 
@@ -40,18 +40,30 @@
 > 
 > Sentinel-2 оснащен многоспектральным формирователем изображений Multispectral Imager (MSI). Этот датчик обеспечивает 13 спектральных диапазонов с размером пикселя от 10 до 60 метров. Его синий (B2), зеленый (B3), красный (B4) и ближний инфракрасный (B8) каналы имеют разрешение 10 метров. Его красный диапазон (B5), ближний инфракрасный диапазон NIR (B6, B7 и B8A) и коротковолновый инфракрасный диапазон SWIR (B11 и B12) имеют разрешение 20 метров. Его диапазоны прибрежного аэрозоля (B1) и перистых облаков (B10) имеют разрешение 60 метров.
 >
-> | Bands	                               | Central Wavelength (nanometers) | Resolution (meters) |
-> |----------------------------------------|---------------------------------|---------------------|
-> | B1 - Ultra Blue (Coastal and Aerosol)  | 443                             | 60                  |
-> | B2 - Blue                          	   | 490           	                 | 10                  |
-> | B3 - Green                         	   | 560           	                 | 10                  |
-> | B4 - Red                          	   | 665           	                 | 10                  |
-> | B5 - Visible and Near Infrared (VNIR)  | 705           	                 | 20                  |
-> | B6 - Visible and Near Infrared (VNIR)  | 740           	                 | 20                  |
-> | B7 - Visible and Near Infrared (VNIR)  | 783           	                 | 20                  |
-> | B8 - Visible and Near Infrared (VNIR)  | 842           	                 | 10                  |
-> | B8a - Visible and Near Infrared (VNIR) | 865           	                 | 20                  |
-> | B9 - Short Wave Infrared (SWIR)        | 940           	                 | 60                  |
-> | B10 - Short Wave Infrared (SWIR)       | 1375           	             | 60                  |
-> | B11 - Short Wave Infrared (SWIR)       | 1610           	             | 20                  |
-> | B12 - Short Wave Infrared (SWIR)       | 2190           	             | 20                  |
+> | Bands	                               | Central Wavelength (micrometers) | Resolution (meters) |
+> |----------------------------------------|----------------------------------|---------------------|
+> | B1 - Ultra Blue (Coastal and Aerosol)  | 0.443                            | 60                  |
+> | B2 - Blue                          	   | 0.49         	                  | 10                  |
+> | B3 - Green                         	   | 0.56         	                  | 10                  |
+> | B4 - Red                          	   | 0.665         	                  | 10                  |
+> | B5 - Visible and Near Infrared (VNIR)  | 0.705         	                  | 20                  |
+> | B6 - Visible and Near Infrared (VNIR)  | 0.74         	                  | 20                  |
+> | B7 - Visible and Near Infrared (VNIR)  | 0.783         	                  | 20                  |
+> | B8 - Visible and Near Infrared (VNIR)  | 0.842         	                  | 10                  |
+> | B8a - Visible and Near Infrared (VNIR) | 0.865         	                  | 20                  |
+> | B9 - Short Wave Infrared (SWIR)        | 0.94         	                  | 60                  |
+> | B10 - Short Wave Infrared (SWIR)       | 1.375         	                  | 60                  |
+> | B11 - Short Wave Infrared (SWIR)       | 1.61         	                  | 20                  |
+> | B12 - Short Wave Infrared (SWIR)       | 2.19         	                  | 20                  |
+
+# Имеющиеся данные
+
+## MODIS
+Территория РФ, все сезоны 2010 года
+
+## Landsat
+Территория 1, map CRS: (447007,6253677), июнь, июль 2021 года
+
+## Sentinel
+Территория 1 (частично), map CRS: (447007,6253677), апрель 2019 года, ноябрь 2020 года, март, май, октябрь 2021 года  
+Территория 2, map CRS: (3620342,6796840), август 2019 года, сентябрь 2020 года, март, май, июль 2021 года, май 2022 года  
