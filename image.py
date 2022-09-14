@@ -22,7 +22,8 @@ def create_image(sample_img_path: str, img_path: str, data: np.array) -> None:
     img.GetRasterBand(1).Fill(0)
     band = img.GetRasterBand(1)
     raster = np.zeros((y_size, x_size), dtype=np.uint8)
-    for y, x, value in zip(list(range(y_size)), list(range(x_size)), data):
+    xs, ys = list(range(x_size)), list(range(y_size))
+    for y, x, value in zip(ys, xs, data):
         raster[y][x] = value
     band.WriteArray(raster)
     img = band = None
