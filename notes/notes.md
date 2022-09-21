@@ -12,6 +12,7 @@
 ## Information
 
 [Satellite data description](./data.md)  
+[Clustering](./clustering.md)  
 [Segmentation](./segmentation.md)  
 [Remote development tips](./remote.md)  
 [References](./references.md)  
