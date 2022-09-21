@@ -1,4 +1,4 @@
-# Remote Development Tips
+# Remote development tips
 
 ## Login into Putty using PowerShell
 
