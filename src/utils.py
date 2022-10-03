@@ -16,5 +16,3 @@ def modis_band_name_from_col_name(col_name: str) -> str:
     }
     band_index = int(col_name[-1])
     return bands[band_index]
-
-
