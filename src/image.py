@@ -27,7 +27,7 @@ def get_relative_x_y(
     return relative_x, relative_y
 
 
-def get_absolute_x_y(img_path: str, relative_x: int, relative_y: int) -> Tuple[int, int]:
+def get_offset_absolute_x_y(img_path: str, relative_x: int, relative_y: int) -> Tuple[int, int]:
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
     geotransform = img.GetGeoTransform()
     top_left_x, top_left_y = geotransform[0], geotransform[3]
@@ -39,16 +39,17 @@ def get_absolute_x_y(img_path: str, relative_x: int, relative_y: int) -> Tuple[i
 
 def read_image(
     img_path: str,
-    top_left_x: int = 0,
-    top_left_y: int = 0,
+    abs_top_left_x: int = 0,
+    abs_top_left_y: int = 0,
     x_size: int = None,
     y_size: int = None,
 ) -> np.array:
+    rel_top_left_x, rel_top_left_y = get_relative_x_y(img_path, abs_top_left_x, abs_top_left_y)
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
     if x_size is None:
         x_size, y_size = img.RasterXSize, img.RasterYSize
     band = img.GetRasterBand(1)
-    data = band.ReadAsArray(top_left_x, top_left_y, x_size, y_size)
+    data = band.ReadAsArray(rel_top_left_x, rel_top_left_y, x_size, y_size)
     data = data.ravel()
     return data
 
@@ -67,15 +68,18 @@ def bands_to_csv(
     data.to_csv(csv_path, index=False)
 
 
-def create_image(img_path: str, sample_img_path: str, data: np.array, top_left_x: int, top_left_y: int, x_size: int, y_size: int) -> None:
+def create_image(img_path: str, sample_img_path: str, data: np.array, abs_top_left_x: int, abs_top_left_y: int, x_size: int, y_size: int) -> None:
+    rel_top_left_x, rel_top_left_y = get_relative_x_y(img_path, abs_top_left_x, abs_top_left_y)
+    offset_abs_top_left_x, offset_abs_top_left_y = get_offset_absolute_x_y(img_path, rel_top_left_x, rel_top_left_y)
+
     fileformat = "GTiff"
     driver = gdal.GetDriverByName(fileformat)
     img = driver.Create(img_path, x_size, y_size, bands=1, eType=gdal.GDT_UInt16)
 
     sample_img = gdal.Open(sample_img_path, gdal.GA_ReadOnly)
     geotransform = list(sample_img.GetGeoTransform())
-    geotransform[0] = top_left_x
-    geotransform[3] = top_left_y
+    geotransform[0] = offset_abs_top_left_x
+    geotransform[3] = offset_abs_top_left_y
     img.SetGeoTransform(geotransform)
     projection = sample_img.GetProjection()
     srs = osr.SpatialReference(wkt=projection)
