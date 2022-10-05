@@ -15,6 +15,35 @@ def reproject(img_path: str, reprojected_img_path: str, projection: str) -> None
     gdal.Warp(reprojected_img_path, img_path, dstSRS=projection)
 
 
+def get_image_bbox(img_path: str) -> Tuple[int, int, int, int]:
+    img = gdal.Open(img_path, gdal.GA_ReadOnly)
+    geotransform = img.GetGeoTransform()
+    x_size, y_size = img.RasterXSize, img.RasterYSize
+    pixel_width, pixel_height = geotransform[1], geotransform[5]
+    top_left_x = geotransform[0]
+    top_left_y = geotransform[3]
+    bottom_right_x = top_left_x + x_size * pixel_width
+    bottom_right_y = top_left_y + y_size * pixel_height
+    return top_left_x, top_left_y, bottom_right_x, bottom_right_y
+
+
+def get_x_y_size_by_bbox(
+    img_path: str,
+    abs_top_left_x: int,
+    abs_top_left_y: int,
+    abs_bottom_right_x: int,
+    abs_bottom_right_y: int,
+) -> Tuple[int, int]:
+    img = gdal.Open(img_path, gdal.GA_ReadOnly)
+    geotransform = img.GetGeoTransform()
+    pixel_width, pixel_height = geotransform[1], geotransform[5]
+    image_width = abs(abs_top_left_x - abs_bottom_right_x)
+    image_height = abs(abs_top_left_y - abs_bottom_right_y)
+    x_size = int(abs(image_width / pixel_width))
+    y_size = int(abs(image_height / pixel_height))
+    return x_size, y_size
+
+
 def get_relative_x_y(
     img_path: str, absolute_x: int, absolute_y: int
 ) -> Tuple[int, int]:
@@ -27,7 +56,9 @@ def get_relative_x_y(
     return relative_x, relative_y
 
 
-def get_offset_absolute_x_y(img_path: str, relative_x: int, relative_y: int) -> Tuple[int, int]:
+def get_offset_absolute_x_y(
+    img_path: str, relative_x: int, relative_y: int
+) -> Tuple[int, int]:
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
     geotransform = img.GetGeoTransform()
     top_left_x, top_left_y = geotransform[0], geotransform[3]
@@ -41,13 +72,28 @@ def read_image(
     img_path: str,
     abs_top_left_x: int = 0,
     abs_top_left_y: int = 0,
+    abs_bottom_right_x: int = None,
+    abs_bottom_right_y: int = None,
     x_size: int = None,
     y_size: int = None,
 ) -> np.array:
-    rel_top_left_x, rel_top_left_y = get_relative_x_y(img_path, abs_top_left_x, abs_top_left_y)
+    rel_top_left_x, rel_top_left_y = get_relative_x_y(
+        img_path, abs_top_left_x, abs_top_left_y
+    )
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
+
     if x_size is None:
-        x_size, y_size = img.RasterXSize, img.RasterYSize
+        if abs_bottom_right_x is None:
+            x_size, y_size = img.RasterXSize, img.RasterYSize
+        else:
+            x_size, y_size = get_x_y_size_by_bbox(
+                img_path,
+                abs_top_left_x,
+                abs_top_left_y,
+                abs_bottom_right_x,
+                abs_bottom_right_y,
+            )
+
     band = img.GetRasterBand(1)
     data = band.ReadAsArray(rel_top_left_x, rel_top_left_y, x_size, y_size)
     data = data.ravel()
@@ -64,13 +110,27 @@ def bands_to_csv(
 ) -> None:
     data = pd.DataFrame(columns=bands_paths.keys())
     for band in bands_paths:
-        data[band] = read_image(bands_paths[band], top_left_x, top_left_y, x_size, y_size)
+        data[band] = read_image(
+            bands_paths[band], top_left_x, top_left_y, x_size, y_size
+        )
     data.to_csv(csv_path, index=False)
 
 
-def create_image(img_path: str, sample_img_path: str, data: np.array, abs_top_left_x: int, abs_top_left_y: int, x_size: int, y_size: int) -> None:
-    rel_top_left_x, rel_top_left_y = get_relative_x_y(img_path, abs_top_left_x, abs_top_left_y)
-    offset_abs_top_left_x, offset_abs_top_left_y = get_offset_absolute_x_y(img_path, rel_top_left_x, rel_top_left_y)
+def create_image(
+    img_path: str,
+    sample_img_path: str,
+    data: np.array,
+    abs_top_left_x: int,
+    abs_top_left_y: int,
+    x_size: int,
+    y_size: int,
+) -> None:
+    rel_top_left_x, rel_top_left_y = get_relative_x_y(
+        sample_img_path, abs_top_left_x, abs_top_left_y
+    )
+    offset_abs_top_left_x, offset_abs_top_left_y = get_offset_absolute_x_y(
+        sample_img_path, rel_top_left_x, rel_top_left_y
+    )
 
     fileformat = "GTiff"
     driver = gdal.GetDriverByName(fileformat)
