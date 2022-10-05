@@ -81,7 +81,12 @@ def create_image(img_path: str, sample_img_path: str, data: np.array, top_left_x
     srs = osr.SpatialReference(wkt=projection)
     img.SetProjection(srs.ExportToWkt())
 
-    img.GetRasterBand(1).WriteArray(data)
+    raster = np.zeros((y_size, x_size), dtype=np.uint8)
+    for y in range(y_size):
+        for x in range(x_size):
+            raster[y][x] = data[x_size * y + x]
+
+    img.GetRasterBand(1).WriteArray(raster)
     img = None
 
 
