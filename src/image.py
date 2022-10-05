@@ -77,10 +77,14 @@ def read_image(
     x_size: int = None,
     y_size: int = None,
 ) -> np.array:
-    rel_top_left_x, rel_top_left_y = get_relative_x_y(
-        img_path, abs_top_left_x, abs_top_left_y
-    )
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
+
+    if abs_top_left_x != 0:
+        rel_top_left_x, rel_top_left_y = get_relative_x_y(
+            img_path, abs_top_left_x, abs_top_left_y
+        )
+    else:
+        rel_top_left_x, rel_top_left_y = abs_top_left_x, abs_top_left_y
 
     if x_size is None:
         if abs_bottom_right_x is None:

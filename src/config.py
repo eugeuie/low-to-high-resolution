@@ -4,6 +4,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 DATA_DIR = os.path.join(BASE_DIR, "data")
+NOTES_DIR = os.path.join(BASE_DIR, "notes")
 INPUT_DATA_DIR = os.path.join(DATA_DIR, "input")
 
 MODELS_DIR = os.path.join(BASE_DIR, "models")
@@ -25,6 +26,8 @@ HIGH_RES_DATA_DIRS = [
     "SENTINEL-2B_MSI_20211008_084414",
 ]
 
+MODIS_CLASSES_LEGEND_FILENAME = "33class_legend_rus.txt"
+MODIS_CLASSES_LEGEND_PATH = os.path.join(NOTES_DIR, MODIS_CLASSES_LEGEND_FILENAME)
 MODIS_MASK_FILENAME = "SubRF_Russia_mask.tif"
 MODIS_SAMPLE_FILENAME = "lccswm2010_4.img"
 MODIS_BANDS_FILENAMES = {
@@ -69,7 +72,6 @@ SENTINEL_SELECTED_TABLE_DATA_FILENAME = f"{SENTINEL_SELECTED_DATA_DIR}_{'_'.join
 SENTINEL_SELECTED_TABLE_DATA_PATH = os.path.join(
     DATA_DIR, SENTINEL_SELECTED_TABLE_DATA_FILENAME
 )
-
 
 TEST_PATH = os.path.join(DATA_DIR, "test.tif")
 
