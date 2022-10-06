@@ -67,11 +67,40 @@ MODIS_SAMPLE_REPROJECTED_PATH = os.path.join(
 )
 MODIS_SELECTED_DATA_FILENAME = f"{_name}_selected.tif"
 MODIS_SELECTED_DATA_PATH = os.path.join(DATA_DIR, MODIS_SELECTED_DATA_FILENAME)
+MODIS_SAMPLE_REPROJECTED_CORRECT_LABELS_FILENAME = (
+    f"{_name}_reprojected_correct_labels.tif"
+)
+MODIS_SAMPLE_REPROJECTED_CORRECT_LABELS_PATH = os.path.join(
+    DATA_DIR, MODIS_SAMPLE_REPROJECTED_CORRECT_LABELS_FILENAME
+)
 
 SENTINEL_SELECTED_TABLE_DATA_FILENAME = f"{SENTINEL_SELECTED_DATA_DIR}_{'_'.join(SENTINEL_SELECTED_10M_BANDS_FILENAMES.keys())}.csv"
 SENTINEL_SELECTED_TABLE_DATA_PATH = os.path.join(
     DATA_DIR, SENTINEL_SELECTED_TABLE_DATA_FILENAME
 )
+
+MODIS_CLASSES_NAMES = [
+    "Фон",
+    "Темнохвойный лес",
+    "Светлохвойный лес",
+    "Лиственный лес",
+    "Смешанный лес с преобладанием хвойных",
+    "Смешанный лес",
+    "Смешанный лес с преобладанием лиственных",
+    "Хвойный листопадный лес",
+    "Редины хвойные листопадные",
+    "Луга",
+    "Степь",
+    "Хвойный кустарник",
+    "Лиственный кустарник",
+    "Кустарничковая тундра",
+    "Травянистая тундра",
+    "Кустарниковая тундра",
+    "Болота",
+    "Прибрежная растительность",
+    "Открытые грунты и выходы горных пород",
+    "Водные объекты",
+]
 
 TEST_PATH = os.path.join(DATA_DIR, "test.tif")
 

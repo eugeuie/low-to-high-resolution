@@ -124,30 +124,40 @@ def create_image(
     img_path: str,
     sample_img_path: str,
     data: np.array,
-    abs_top_left_x: int,
-    abs_top_left_y: int,
-    x_size: int,
-    y_size: int,
+    abs_top_left_x: int = None,
+    abs_top_left_y: int = None,
+    x_size: int = None,
+    y_size: int = None,
 ) -> None:
-    rel_top_left_x, rel_top_left_y = get_relative_x_y(
-        sample_img_path, abs_top_left_x, abs_top_left_y
-    )
-    offset_abs_top_left_x, offset_abs_top_left_y = get_offset_absolute_x_y(
-        sample_img_path, rel_top_left_x, rel_top_left_y
-    )
-
-    fileformat = "GTiff"
-    driver = gdal.GetDriverByName(fileformat)
-    img = driver.Create(img_path, x_size, y_size, bands=1, eType=gdal.GDT_UInt16)
-
     sample_img = gdal.Open(sample_img_path, gdal.GA_ReadOnly)
-    geotransform = list(sample_img.GetGeoTransform())
-    geotransform[0] = offset_abs_top_left_x
-    geotransform[3] = offset_abs_top_left_y
-    img.SetGeoTransform(geotransform)
-    projection = sample_img.GetProjection()
-    srs = osr.SpatialReference(wkt=projection)
-    img.SetProjection(srs.ExportToWkt())
+
+    if abs_top_left_x is not None:
+        rel_top_left_x, rel_top_left_y = get_relative_x_y(
+            sample_img_path, abs_top_left_x, abs_top_left_y
+        )
+        offset_abs_top_left_x, offset_abs_top_left_y = get_offset_absolute_x_y(
+            sample_img_path, rel_top_left_x, rel_top_left_y
+        )
+
+        fileformat = "GTiff"
+        driver = gdal.GetDriverByName(fileformat)
+        img = driver.Create(img_path, x_size, y_size, bands=1, eType=gdal.GDT_UInt16)
+
+        geotransform = list(sample_img.GetGeoTransform())
+        geotransform[0] = offset_abs_top_left_x
+        geotransform[3] = offset_abs_top_left_y
+        img.SetGeoTransform(geotransform)
+        projection = sample_img.GetProjection()
+        srs = osr.SpatialReference(wkt=projection)
+        img.SetProjection(srs.ExportToWkt())
+
+    else:
+        driver = sample_img.GetDriver()
+        x_size, y_size = sample_img.RasterXSize, sample_img.RasterYSize
+        img = driver.Create(img_path, x_size, y_size, 1, gdal.GDT_UInt16)
+        img.SetGeoTransform(sample_img.GetGeoTransform())
+        img.SetProjection(sample_img.GetProjection())
+        img.GetRasterBand(1).Fill(0)
 
     raster = np.zeros((y_size, x_size), dtype=np.uint8)
     for y in range(y_size):
@@ -156,20 +166,3 @@ def create_image(
 
     img.GetRasterBand(1).WriteArray(raster)
     img = None
-
-
-# def create_image(sample_img_path: str, img_path: str, data: np.array) -> None:
-#     sample_img = gdal.Open(sample_img_path, gdal.GA_ReadOnly)
-#     driver = sample_img.GetDriver()
-#     x_size, y_size = sample_img.RasterXSize, sample_img.RasterYSize
-#     img = driver.Create(img_path, x_size, y_size, 1, gdal.GDT_UInt16)
-#     img.SetGeoTransform(sample_img.GetGeoTransform())
-#     img.SetProjection(sample_img.GetProjection())
-#     img.GetRasterBand(1).Fill(0)
-#     band = img.GetRasterBand(1)
-#     raster = np.zeros((y_size, x_size), dtype=np.uint8)
-#     for y in range(y_size):
-#         for x in range(x_size):
-#             raster[y][x] = data[x_size * y + x]
-#     band.WriteArray(raster)
-#     img = band = None
