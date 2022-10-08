@@ -166,3 +166,10 @@ def create_image(
 
     img.GetRasterBand(1).WriteArray(raster)
     img = None
+
+
+def remove_background(img_path: str, no_background_img_path: str, background_value: int = 0) -> None:
+    img = gdal.Open(img_path, gdal.GA_ReadOnly)
+    x_size, y_size = img.RasterXSize, img.RasterYSize
+    warp_options = gdal.WarpOptions(srcNodata=0, dstNodata=background_value, width=x_size, height=y_size)
+    gdal.Warp(no_background_img_path, img_path, options=warp_options)

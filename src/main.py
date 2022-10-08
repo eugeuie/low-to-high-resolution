@@ -76,8 +76,12 @@ def get_modis_data_with_correct_labels() -> None:
     )
 
 
+def remove_background() -> None:
+    ...
+
+
 if __name__ == "__main__":
-    reproject()  # 4 min
+    reproject()  # 25 sec
     bands_to_csv()  # 5 min
     select_territory_from_modis_data()  # <1 sec
-    get_modis_data_with_correct_labels()  # 14 min
+    get_modis_data_with_correct_labels()  # 9 min
