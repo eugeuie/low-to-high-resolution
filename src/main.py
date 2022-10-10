@@ -1,5 +1,58 @@
+import os
 import numpy as np
 import config as config, utils, image
+
+
+def reproject_modis_data() -> None:
+    """Reprojection of MODIS sample and Russia mask for MODIS sample into Sentinel data projection."""
+    image.reproject(
+        img_path=config.modis_ru_mask_path,
+        reprojected_img_path=config.modis_ru_mask_corrected_path,
+        sample_img_path=config.sentinel_10m_bands_paths["VNIR"],
+    )
+    image.reproject(
+        img_path=config.modis_sample_path,
+        reprojected_img_path=config.modis_sample_corrected_path,
+        sample_img_path=config.sentinel_10m_bands_paths["VNIR"],
+    )
+
+
+def correct_modis_sample_labels() -> None:
+    """Correcting classes labels for MODIS sample."""
+    data = image.read_data(config.modis_sample_corrected_path)
+    ids_classes = utils.parse_classes_legend(config.modis_classes_legend_path)
+    sample_class_ids = np.unique(data)
+    sample_ids_classes = {
+        class_id: ids_classes[class_id] for class_id in sample_class_ids
+    }
+
+    sample_classes_ids = {}
+    for name in config.modis_sample_classes:
+        for class_id, class_name in sample_ids_classes.items():
+            if class_name == name:
+                sample_classes_ids[name] = sample_classes_ids.get(name, []) + [class_id]
+
+    for ids in sample_classes_ids.values():
+        if len(ids) > 1:
+            for i in ids[1:]:
+                data[data == i] = ids[0]
+
+    image.create_image(
+        img_path=config.temp_img_path,
+        sample_img_path=config.modis_sample_corrected_path,
+        data=data,
+    )
+
+    os.remove(config.modis_sample_corrected_path)
+    os.rename(config.temp_img_path, config.modis_sample_corrected_path)
+
+    image.set_color_table(
+        img_path=config.modis_sample_corrected_path,
+        sample_img_path=config.modis_sample_path,
+    )
+
+
+
 
 
 # def bands_to_csv() -> None:
@@ -41,32 +94,6 @@ import config as config, utils, image
 #     )
 
 
-def get_modis_data_with_correct_labels() -> None:
-    data = image.read_data(config.modis_sample_corrected_path)
-    ids_classes = utils.parse_classes_legend(config.modis_classes_legend_path)
-    sample_class_ids = np.unique(data)
-    sample_ids_classes = {
-        class_id: ids_classes[class_id] for class_id in sample_class_ids
-    }
-
-    sample_classes_ids = {}
-    for name in config.sample_labels:
-        for class_id, class_name in sample_ids_classes.items():
-            if class_name == name:
-                sample_classes_ids[name] = sample_classes_ids.get(name, []) + [class_id]
-
-    for ids in sample_classes_ids.values():
-        if len(ids) > 1:
-            for i in ids[1:]:
-                data[data == i] = ids[0]
-
-    image.create_image(
-        img_path=config.modis_sample_corrected_path,
-        sample_img_path=config.modis_sample_corrected_path,
-        data=data,
-    )
-
-
 # def remove_background() -> None:
 # image.remove_background(
 #     config.MODIS_SELECTED_DATA_PATH,
@@ -75,20 +102,9 @@ def get_modis_data_with_correct_labels() -> None:
 
 
 if __name__ == "__main__":
-    # Reprojection of MODIS sample and Russia mask for MODIS sample into Sentinel data projection
-    # 2 min
-    image.reproject(
-        img_path=config.modis_ru_mask_path,
-        reprojected_img_path=config.modis_ru_mask_corrected_path,
-        sample_img_path=config.sentinel_10m_bands_paths["VNIR"],
-    )
-    image.reproject(
-        img_path=config.modis_sample_path,
-        reprojected_img_path=config.modis_sample_corrected_path,
-        sample_img_path=config.sentinel_10m_bands_paths["VNIR"],
-    )
+    reproject_modis_data()  # 2 min
+    correct_modis_sample_labels()  # 9 min
 
     # bands_to_csv()  # 5 min
-    # get_modis_data_with_correct_labels()  # 9 min
     # select_territory_from_modis_data()  # <1 sec
     # remove_background()  # <1 min

@@ -9,6 +9,8 @@ notes_dir = join(base_dir, "notes")
 
 input_data_dir = join(data_dir, "input")
 
+temp_img_path = join(data_dir, "temp.tif")
+
 seed = 42
 
 # MODIS
