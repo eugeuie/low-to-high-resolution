@@ -18,19 +18,7 @@ def modis_band_name_from_col_name(col_name: str) -> str:
     return bands[band_index]
 
 
-def parse_modis_classes_names(legend_path: str) -> dict:
-    """Parsing classes legend from text file.
-
-    Parameters
-    ----------
-    legend_path : string
-        Input textfile path.
-
-    Returns
-    -------
-    classes : dict
-        Classes legend.
-    """
+def parse_classes_legend(legend_path: str) -> dict:
     classes = {}
     with open(legend_path, mode="rt", encoding="utf-8") as f:
         for line in f:

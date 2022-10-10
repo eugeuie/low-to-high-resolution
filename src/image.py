@@ -8,14 +8,22 @@ def get_projection(img_path: str) -> str:
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
     projection = img.GetProjection()
     srs = osr.SpatialReference(wkt=projection)
-    return f"{srs.GetAttrValue('AUTHORITY', 0)}:{srs.GetAttrValue('AUTHORITY', 1)}"
+    epsg_code = f"{srs.GetAttrValue('AUTHORITY', 0)}:{srs.GetAttrValue('AUTHORITY', 1)}"
+    return epsg_code
 
 
-def reproject(img_path: str, reprojected_img_path: str, projection: str) -> None:
+def reproject(
+    img_path: str,
+    reprojected_img_path: str,
+    sample_img_path: str = None,
+    projection: str = None,
+) -> None:
+    if sample_img_path:
+        projection = get_projection(sample_img_path)
     gdal.Warp(reprojected_img_path, img_path, dstSRS=projection)
 
 
-def get_image_bbox(img_path: str) -> Tuple[int, int, int, int]:
+def get_bbox(img_path: str) -> Tuple[int, int, int, int]:
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
     geotransform = img.GetGeoTransform()
     x_size, y_size = img.RasterXSize, img.RasterYSize
@@ -68,7 +76,7 @@ def get_offset_absolute_x_y(
     return absolute_x, absolute_y
 
 
-def read_image(
+def read_data(
     img_path: str,
     abs_top_left_x: int = 0,
     abs_top_left_y: int = 0,
@@ -114,7 +122,7 @@ def bands_to_csv(
 ) -> None:
     data = pd.DataFrame(columns=bands_paths.keys())
     for band in bands_paths:
-        data[band] = read_image(
+        data[band] = read_data(
             bands_paths[band], top_left_x, top_left_y, x_size, y_size
         )
     data.to_csv(csv_path, index=False)
@@ -168,8 +176,28 @@ def create_image(
     img = None
 
 
-def remove_background(img_path: str, no_background_img_path: str, background_value: int = 0) -> None:
+def remove_background(
+    img_path: str, no_background_img_path: str, background_value: int = 0
+) -> None:
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
     x_size, y_size = img.RasterXSize, img.RasterYSize
-    warp_options = gdal.WarpOptions(srcNodata=0, dstNodata=background_value, width=x_size, height=y_size)
+    warp_options = gdal.WarpOptions(
+        srcNodata=0, dstNodata=background_value, width=x_size, height=y_size
+    )
     gdal.Warp(no_background_img_path, img_path, options=warp_options)
+
+
+def get_color_table(img_path: str) -> None:
+    img = gdal.Open(img_path, gdal.GA_ReadOnly)
+    band = img.GetRasterBand(1)
+    color_table = band.GetRasterColorTable()
+    return color_table
+
+
+def set_color_table(img_path: str, sample_img_path: str) -> None:
+    sample_img = gdal.Open(sample_img_path, gdal.GA_ReadOnly)
+    sample_band = sample_img.GetRasterBand(1)
+    color_table = sample_band.GetRasterColorTable()
+    img = gdal.Open(img_path, gdal.GA_ReadOnly)
+    band = img.GetRasterBand(1)
+    band.SetRasterColorTable(color_table)
