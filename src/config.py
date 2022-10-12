@@ -57,6 +57,7 @@ modis_sample_classes = [
 ]
 modis_ru_mask_corrected_path = join(data_dir, "modis_ru_mask.tif")
 modis_sample_corrected_path = join(data_dir, "modis_sample.tif")
+modis_sample_corrected_selected_path = join(data_dir, "modis_sample_selected.tif")
 
 # Sentinel
 

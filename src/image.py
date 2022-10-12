@@ -15,8 +15,8 @@ def get_projection(img_path: str) -> str:
 def reproject(
     img_path: str,
     reprojected_img_path: str,
-    sample_img_path: str = None,
-    projection: str = None,
+    sample_img_path: str = '',
+    projection: str = '',
 ) -> None:
     if sample_img_path:
         projection = get_projection(sample_img_path)
@@ -47,8 +47,8 @@ def get_x_y_size_by_bbox(
     pixel_width, pixel_height = geotransform[1], geotransform[5]
     image_width = abs(abs_top_left_x - abs_bottom_right_x)
     image_height = abs(abs_top_left_y - abs_bottom_right_y)
-    x_size = int(abs(image_width / pixel_width))
-    y_size = int(abs(image_height / pixel_height))
+    x_size = int(np.ceil(abs(image_width / pixel_width)))
+    y_size = int(np.ceil(abs(image_height / pixel_height)))
     return x_size, y_size
 
 
@@ -80,11 +80,11 @@ def read_data(
     img_path: str,
     abs_top_left_x: int = 0,
     abs_top_left_y: int = 0,
-    abs_bottom_right_x: int = None,
-    abs_bottom_right_y: int = None,
-    x_size: int = None,
-    y_size: int = None,
-) -> np.array:
+    abs_bottom_right_x: int = 0,
+    abs_bottom_right_y: int = 0,
+    x_size: int = 0,
+    y_size: int = 0,
+) -> np.ndarray:
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
 
     if abs_top_left_x != 0:
@@ -94,8 +94,8 @@ def read_data(
     else:
         rel_top_left_x, rel_top_left_y = abs_top_left_x, abs_top_left_y
 
-    if x_size is None:
-        if abs_bottom_right_x is None:
+    if x_size == 0:
+        if abs_bottom_right_x == 0:
             x_size, y_size = img.RasterXSize, img.RasterYSize
         else:
             x_size, y_size = get_x_y_size_by_bbox(
@@ -112,15 +112,29 @@ def read_data(
     return data
 
 
+def get_mask_bbox(img_path: str) -> Tuple[int, int, int, int]:
+    img = gdal.Open(img_path, gdal.GA_ReadOnly)
+    x_size, y_size = img.RasterXSize, img.RasterYSize
+    band = img.GetRasterBand(1)
+    data = band.ReadAsArray(0, 0, x_size, y_size)
+    mask_indices = np.argwhere(data == 1)
+    xs = mask_indices[:, 1]
+    ys = mask_indices[:, 0]
+    min_x, max_y, max_x, min_y = min(xs), min(ys), max(xs) + 1, max(ys) + 1
+    abs_min_x, abs_max_y = get_offset_absolute_x_y(img_path, min_x, max_y)
+    abs_max_x, abs_min_y = get_offset_absolute_x_y(img_path, max_x, min_y)
+    return abs_min_x, abs_max_y, abs_max_x, abs_min_y
+
+
 def bands_to_csv(
     bands_paths: dict,
     csv_path: str,
     top_left_x: int = 0,
     top_left_y: int = 0,
-    x_size: int = None,
-    y_size: int = None,
+    x_size: int = 0,
+    y_size: int = 0,
 ) -> None:
-    data = pd.DataFrame(columns=bands_paths.keys())
+    data = pd.DataFrame(columns=list(bands_paths.keys()))
     for band in bands_paths:
         data[band] = read_data(
             bands_paths[band], top_left_x, top_left_y, x_size, y_size
@@ -131,15 +145,15 @@ def bands_to_csv(
 def create_image(
     img_path: str,
     sample_img_path: str,
-    data: np.array,
-    abs_top_left_x: int = None,
-    abs_top_left_y: int = None,
-    x_size: int = None,
-    y_size: int = None,
+    data: np.ndarray,
+    abs_top_left_x: int = 0,
+    abs_top_left_y: int = 0,
+    x_size: int = 0,
+    y_size: int = 0,
 ) -> None:
     sample_img = gdal.Open(sample_img_path, gdal.GA_ReadOnly)
 
-    if abs_top_left_x is not None:
+    if abs_top_left_x != 0:
         rel_top_left_x, rel_top_left_y = get_relative_x_y(
             sample_img_path, abs_top_left_x, abs_top_left_y
         )
@@ -201,3 +215,40 @@ def set_color_table(img_path: str, sample_img_path: str) -> None:
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
     band = img.GetRasterBand(1)
     band.SetRasterColorTable(color_table)
+
+
+class Point:
+    def __init__(self, x: int, y: int) -> None:
+        self.x = x
+        self.y = y
+
+
+class Size:
+    def __init__(self, x: int, y: int) -> None:
+        self.x = x
+        self.y = y
+
+
+class Box:
+    def __init__(self, top_left_point: Point, bottom_right_point: Point) -> None:
+        self.top_left_point = top_left_point
+        self.bottom_right_point = bottom_right_point
+
+
+class Image:
+    def __init__(self, path: str) -> None:
+        self.path = path
+    
+    def size(self) -> Size:
+        img = gdal.Open(self.path, gdal.GA_ReadOnly)
+        width , height = img.RasterXSize, img.RasterYSize
+        size = Size(width, height)
+        return size
+
+    @property
+    def projection(self) -> str:
+        img = gdal.Open(self.path, gdal.GA_ReadOnly)
+        projection = img.GetProjection()
+        srs = osr.SpatialReference(wkt=projection)
+        epsg_code = f"{srs.GetAttrValue('AUTHORITY', 0)}:{srs.GetAttrValue('AUTHORITY', 1)}"
+        return epsg_code
