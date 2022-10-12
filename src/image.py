@@ -4,23 +4,58 @@ from typing import Tuple
 from osgeo import gdal, osr
 
 
-def get_projection(img_path: str) -> str:
-    img = gdal.Open(img_path, gdal.GA_ReadOnly)
-    projection = img.GetProjection()
-    srs = osr.SpatialReference(wkt=projection)
-    epsg_code = f"{srs.GetAttrValue('AUTHORITY', 0)}:{srs.GetAttrValue('AUTHORITY', 1)}"
-    return epsg_code
+class Point:
+    def __init__(self, x: int, y: int, is_abs: bool = True) -> None:
+        self.x = x
+        self.y = y
+        self.is_abs = is_abs
 
 
-def reproject(
-    img_path: str,
-    reprojected_img_path: str,
-    sample_img_path: str = '',
-    projection: str = '',
-) -> None:
-    if sample_img_path:
-        projection = get_projection(sample_img_path)
-    gdal.Warp(reprojected_img_path, img_path, dstSRS=projection)
+class Box:
+    def __init__(self, top_left_point: Point, bottom_right_point: Point) -> None:
+        self.top_left_point = top_left_point
+        self.bottom_right_point = bottom_right_point
+
+
+class Image:
+    def __init__(self, path: str) -> None:
+        self.path = path
+
+    def projection(self) -> str:
+        img = gdal.Open(self.path, gdal.GA_ReadOnly)
+        projection = img.GetProjection()
+        srs = osr.SpatialReference(wkt=projection)
+        epsg_code = f"{srs.GetAttrValue('AUTHORITY', 0)}:{srs.GetAttrValue('AUTHORITY', 1)}"
+        return epsg_code
+
+    def color_table(self) -> gdal.ColorTable:
+        img = gdal.Open(self.path, gdal.GA_ReadOnly)
+        band = img.GetRasterBand(1)
+        color_table = band.GetRasterColorTable()
+        return color_table
+
+    def box(self) -> Box:
+        img = gdal.Open(self.path, gdal.GA_ReadOnly)
+        geotransform = img.GetGeoTransform()
+        x_size, y_size = img.RasterXSize, img.RasterYSize
+        pixel_width, pixel_height = geotransform[1], geotransform[5]
+        top_left_point = Point(x=geotransform[0], y=geotransform[3])
+        bottom_right_point = Point(
+            x=top_left_point.x + x_size * pixel_width,
+            y=top_left_point.y + y_size * pixel_height
+        )
+        box = Box(top_left_point, bottom_right_point)
+        return box
+
+# def reproject(
+#     img_path: str,
+#     reprojected_img_path: str,
+#     sample_img_path: str = '',
+#     projection: str = '',
+# ) -> None:
+#     if sample_img_path:
+#         projection = get_projection(sample_img_path)
+#     gdal.Warp(reprojected_img_path, img_path, dstSRS=projection)
 
 
 def get_bbox(img_path: str) -> Tuple[int, int, int, int]:
@@ -215,40 +250,3 @@ def set_color_table(img_path: str, sample_img_path: str) -> None:
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
     band = img.GetRasterBand(1)
     band.SetRasterColorTable(color_table)
-
-
-class Point:
-    def __init__(self, x: int, y: int) -> None:
-        self.x = x
-        self.y = y
-
-
-class Size:
-    def __init__(self, x: int, y: int) -> None:
-        self.x = x
-        self.y = y
-
-
-class Box:
-    def __init__(self, top_left_point: Point, bottom_right_point: Point) -> None:
-        self.top_left_point = top_left_point
-        self.bottom_right_point = bottom_right_point
-
-
-class Image:
-    def __init__(self, path: str) -> None:
-        self.path = path
-    
-    def size(self) -> Size:
-        img = gdal.Open(self.path, gdal.GA_ReadOnly)
-        width , height = img.RasterXSize, img.RasterYSize
-        size = Size(width, height)
-        return size
-
-    @property
-    def projection(self) -> str:
-        img = gdal.Open(self.path, gdal.GA_ReadOnly)
-        projection = img.GetProjection()
-        srs = osr.SpatialReference(wkt=projection)
-        epsg_code = f"{srs.GetAttrValue('AUTHORITY', 0)}:{srs.GetAttrValue('AUTHORITY', 1)}"
-        return epsg_code
