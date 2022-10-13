@@ -29,13 +29,6 @@ def get_projection_code(img_path: str) -> str:
     return epsg_code
 
 
-def get_color_table(img_path: str) -> gdal.ColorTable:
-    img = gdal.Open(img_path, gdal.GA_ReadOnly)
-    band = img.GetRasterBand(1)
-    color_table = band.GetRasterColorTable()
-    return color_table
-
-
 def get_box(img_path: str) -> Box:
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
     geotransform = img.GetGeoTransform()
@@ -108,7 +101,9 @@ def get_mask_box(mask_path: str) -> Box:
 
 
 def set_color_table(img_path: str, sample_img_path: str) -> None:
-    color_table = get_color_table(sample_img_path)
+    sample_img = gdal.Open(sample_img_path, gdal.GA_ReadOnly)
+    sample_band = sample_img.GetRasterBand(1)
+    color_table = sample_band.GetRasterColorTable()
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
     band = img.GetRasterBand(1)
     band.SetRasterColorTable(color_table)
@@ -214,7 +209,7 @@ def create_by_box(
     box: Box,
     flat_data: bool = True,
 ) -> None:
-    x_size, y_size = get_x_y_sizes_by_box(img_path, box)
+    x_size, y_size = get_x_y_sizes_by_box(sample_img_path, box)
     create(
         img_path, sample_img_path, data, box.top_left_point, x_size, y_size, flat_data
     )

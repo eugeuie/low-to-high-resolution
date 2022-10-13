@@ -25,3 +25,8 @@ def parse_classes_legend(legend_path: str) -> dict:
             key, value = line.rstrip().split(". ")
             classes[int(key)] = value
     return classes
+
+
+def rename_temp_file(temp_file_path: str, dst_file_path: str) -> None:
+    os.remove(dst_file_path)
+    os.rename(temp_file_path, dst_file_path)

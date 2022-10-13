@@ -6,6 +6,7 @@ base_dir = dirname(dirname(abspath(__file__)))
 data_dir = join(base_dir, "data")
 models_dir = join(base_dir, "models")
 notes_dir = join(base_dir, "notes")
+logs_dir = join(base_dir, "logs")
 
 input_data_dir = join(data_dir, "input")
 
@@ -29,9 +30,9 @@ _modis_bands_filenames = {
     "FALL3": "2010-09-03.img",
 }
 
-modis_ru_mask_path = join(input_data_dir, "SubRF_Russia_mask.tif")
-modis_sample_path = join(input_data_dir, "lccswm2010_4.img")
-modis_classes_legend_path = join(notes_dir, "33class_legend_rus.txt")
+modis_ru_mask_input_path = join(input_data_dir, "SubRF_Russia_mask.tif")
+modis_sample_input_path = join(input_data_dir, "lccswm2010_4.img")
+modis_classes_legend_input_path = join(notes_dir, "33class_legend_rus.txt")
 
 modis_sample_classes = [
     "Фон",
@@ -55,9 +56,9 @@ modis_sample_classes = [
     "Открытые грунты и выходы горных пород",
     "Водные объекты",
 ]
-modis_ru_mask_corrected_path = join(data_dir, "modis_ru_mask.tif")
-modis_sample_corrected_path = join(data_dir, "modis_sample.tif")
-modis_sample_corrected_selected_path = join(data_dir, "modis_sample_selected.tif")
+modis_ru_mask_path = join(data_dir, "modis_ru_mask.tif")
+modis_sample_path = join(data_dir, "modis_sample.tif")
+modis_sample_selected_path = join(data_dir, "modis_sample_selected.tif")
 
 # Sentinel
 
@@ -69,9 +70,9 @@ _sentinel_10m_bands_filenames = {
     "VNIR": "SENTINEL-2B_MSI_20210511_084252_channel8_1.tif",
 }
 
-sentinel_path = join(input_data_dir, _sentinel_filename)
-sentinel_10m_bands_paths = {
-    name: join(sentinel_path, value)
+sentinel_input_path = join(input_data_dir, _sentinel_filename)
+sentinel_10m_bands_input_paths = {
+    name: join(sentinel_input_path, value)
     for name, value in _sentinel_10m_bands_filenames.items()
 }
 
