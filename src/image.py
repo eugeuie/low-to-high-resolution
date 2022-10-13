@@ -108,9 +108,7 @@ def get_mask_box(mask_path: str) -> Box:
 
 
 def set_color_table(img_path: str, sample_img_path: str) -> None:
-    sample_img = gdal.Open(sample_img_path, gdal.GA_ReadOnly)
-    sample_band = sample_img.GetRasterBand(1)
-    color_table = sample_band.GetRasterColorTable()
+    color_table = get_color_table(sample_img_path)
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
     band = img.GetRasterBand(1)
     band.SetRasterColorTable(color_table)
