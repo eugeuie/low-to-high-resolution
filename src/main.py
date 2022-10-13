@@ -37,7 +37,7 @@ def correct_modis_sample_labels() -> None:
             for i in ids[1:]:
                 data[data == i] = ids[0]
 
-    image.create_image(
+    image.create(
         img_path=config.temp_img_path,
         sample_img_path=config.modis_sample_corrected_path,
         data=data,
@@ -53,20 +53,20 @@ def correct_modis_sample_labels() -> None:
 
 
 def crop_mask() -> None:
-    min_x, max_y, max_x, min_y = image.get_mask_bbox(config.modis_ru_mask_corrected_path)
+    min_x, max_y, max_x, min_y = image.get_mask_box(config.modis_ru_mask_corrected_path)
     data = image.read_data(config.modis_ru_mask_corrected_path, min_x, max_y, max_x, min_y)
     data[data != 1] = 0
-    x_size, y_size = image.get_x_y_size_by_bbox(config.modis_ru_mask_corrected_path, min_x, max_y, max_x, min_y)
-    image.create_image(config.temp_img_path, config.modis_ru_mask_corrected_path, data, min_x, max_y, x_size, y_size)
+    x_size, y_size = image.get_x_y_sizes_by_box(config.modis_ru_mask_corrected_path, min_x, max_y, max_x, min_y)
+    image.create(config.temp_img_path, config.modis_ru_mask_corrected_path, data, min_x, max_y, x_size, y_size)
     os.remove(config.modis_ru_mask_corrected_path)
     os.rename(config.temp_img_path, config.modis_ru_mask_corrected_path)
 
 
 def crop_modis_sample() -> None:
-    min_x, max_y, max_x, min_y = image.get_mask_bbox(config.modis_ru_mask_corrected_path)
+    min_x, max_y, max_x, min_y = image.get_mask_box(config.modis_ru_mask_corrected_path)
     data = image.read_data(config.modis_sample_corrected_path, min_x, max_y, max_x, min_y)
-    x_size, y_size = image.get_x_y_size_by_bbox(config.modis_sample_corrected_path, min_x, max_y, max_x, min_y)
-    image.create_image(config.temp_img_path, config.modis_sample_corrected_path, data, min_x, max_y, x_size, y_size)
+    x_size, y_size = image.get_x_y_sizes_by_box(config.modis_sample_corrected_path, min_x, max_y, max_x, min_y)
+    image.create(config.temp_img_path, config.modis_sample_corrected_path, data, min_x, max_y, x_size, y_size)
     os.remove(config.modis_sample_corrected_path)
     os.rename(config.temp_img_path, config.modis_sample_corrected_path)
     image.set_color_table(config.modis_sample_corrected_path, config.modis_sample_path)
@@ -102,14 +102,14 @@ def select_territory_from_modis_data() -> None:
         abs_bottom_right_x,
         abs_bottom_right_y,
     )
-    selected_data_x_size, selected_data_y_size = image.get_x_y_size_by_bbox(
+    selected_data_x_size, selected_data_y_size = image.get_x_y_sizes_by_box(
         config.modis_sample_corrected_path,
         abs_top_left_x,
         abs_top_left_y,
         abs_bottom_right_x,
         abs_bottom_right_y,
     )
-    image.create_image(
+    image.create(
         config.modis_sample_corrected_selected_path,
         config.modis_sample_corrected_path,
         selected_data,
