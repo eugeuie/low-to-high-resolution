@@ -21,6 +21,7 @@
 
 ## Software
 
+[osgeo package docs](https://gdal.org/api/python/osgeo.html)  
 [grass gis](https://grass.osgeo.org/)  
 [saga](https://live.osgeo.org/archive/6.5/en/overview/saga_overview.html)  
-[scikit-image](https://scikit-image.org/docs/stable/index.html#)
+[scikit-image](https://scikit-image.org/docs/stable/index.html#)  

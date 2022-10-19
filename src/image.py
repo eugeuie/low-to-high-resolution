@@ -120,10 +120,14 @@ def reproject(
     gdal.Warp(reprojected_img_path, img_path, dstSRS=projection_code)
 
 
+def crop_by_box(cropped_img_path: str, img_path: str, box: Box) -> None:
+    min_x, min_y, max_x, max_y = box.top_left_point.x, box.bottom_right_point.y, box.bottom_right_point.x, box.top_left_point.y
+    gdal.Warp(cropped_img_path, img_path, outputBounds=[min_x, min_y, max_x, max_y])
+
+
 def crop_by_nonzero_data_box(cropped_img_path: str, img_path: str) -> None:
     nonzero_data_box = get_nonzero_data_box(img_path)
-    min_x, min_y, max_x, max_y = nonzero_data_box.top_left_point.x, nonzero_data_box.bottom_right_point.y, nonzero_data_box.bottom_right_point.x, nonzero_data_box.top_left_point.y
-    gdal.Warp(cropped_img_path, img_path, outputBounds=[min_x, min_y, max_x, max_y])
+    crop_by_box(cropped_img_path, img_path, nonzero_data_box)
 
 
 def remove_background(

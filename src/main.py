@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import config, utils, image
-from osgeo import gdal
 
 
 def reproject_modis_sample() -> None:
