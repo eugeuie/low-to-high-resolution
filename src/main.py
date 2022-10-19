@@ -1,15 +1,10 @@
 import os
 import numpy as np
 import config, utils, image
+from osgeo import gdal
 
 
-def reproject_modis_data() -> None:
-    image.reproject(
-        reprojected_img_path=config.modis_ru_mask_path,
-        img_path=config.modis_ru_mask_input_path,
-        sample_img_path=config.sentinel_10m_bands_input_paths["VNIR"],
-    )
-
+def reproject_modis_sample() -> None:
     image.reproject(
         reprojected_img_path=config.modis_sample_path,
         img_path=config.modis_sample_input_path,
@@ -17,16 +12,8 @@ def reproject_modis_data() -> None:
     )
 
 
-def crop_modis_data() -> None:
-    mask_box = image.get_mask_box(config.modis_ru_mask_path)
-
-    data = image.read_box_data(config.modis_ru_mask_path, mask_box)
-    data[data != 1] = 0
-    image.create_by_box(config.temp_img_path, config.modis_ru_mask_path, data, mask_box)
-    utils.rename_temp_file(config.temp_img_path, config.modis_ru_mask_path)
-
-    data = image.read_box_data(config.modis_sample_path, mask_box)
-    image.create_by_box(config.temp_img_path, config.modis_sample_path, data, mask_box)
+def crop_modis_sample() -> None:
+    image.crop_by_nonzero_data_box(config.temp_img_path, config.modis_sample_path)
     utils.rename_temp_file(config.temp_img_path, config.modis_sample_path)
 
 
@@ -39,7 +26,8 @@ def correct_modis_sample_labels() -> None:
     }
 
     sample_classes_ids = {}
-    for name in config.modis_sample_classes:
+    sample_classes_unique_ordered = list(dict.fromkeys(sample_ids_classes.values()))
+    for name in sample_classes_unique_ordered:
         for class_id, class_name in sample_ids_classes.items():
             if class_name == name:
                 sample_classes_ids[name] = sample_classes_ids.get(name, []) + [class_id]
@@ -54,15 +42,15 @@ def correct_modis_sample_labels() -> None:
         sample_img_path=config.modis_sample_path,
         data=data,
     )
-    
-    image.set_color_table(config.modis_sample_path, config.modis_sample_input_path)
+
     utils.rename_temp_file(config.temp_img_path, config.modis_sample_path)
 
 
-def remove_background() -> None:
+def set_colors_modis_sample() -> None:
+    image.set_color_table(config.modis_sample_path, config.modis_map_input_path)
     image.remove_background(
-        config.modis_sample_path,
         config.temp_img_path,
+        config.modis_sample_path,
     )
     utils.rename_temp_file(config.temp_img_path, config.modis_sample_path)
 
@@ -116,11 +104,12 @@ def select_territory_from_modis_data() -> None:
 
 
 if __name__ == "__main__":
-    
-    # reproject_modis_data()  # 2 min
-    # crop_modis_data()  # 9 min
-    # correct_modis_sample_labels()  # 5 min
-    # remove_background()  # 30 sec
+    ...
+    # reproject_modis_sample()  # 30 sec
+    # crop_modis_sample()  # 30 sec
+    # correct_modis_sample_labels()  # 4 min
+    # set_colors_modis_sample()  # 30 sec
+
     # select_territory_from_modis_data()  # <1 sec
 
     # bands_to_csv()  # 5 min

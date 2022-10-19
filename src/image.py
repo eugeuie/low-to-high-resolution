@@ -85,16 +85,16 @@ def get_offset_point(img_path: str, point: Point) -> Point:
     return offset_point
 
 
-def get_mask_box(mask_path: str) -> Box:
-    data = read_data(mask_path, flat_data=False)
-    mask_indices = np.argwhere(data == 1)
-    xs = mask_indices[:, 1]
-    ys = mask_indices[:, 0]
+def get_nonzero_data_box(img_path: str) -> Box:
+    data = read_data(img_path, flat_data=False)
+    nonzero_data_indices = np.argwhere(data != 0)
+    xs = nonzero_data_indices[:, 1]
+    ys = nonzero_data_indices[:, 0]
     rel_top_left_point = Point(x=min(xs), y=min(ys), is_abs=False)
     rel_bottom_right_point = Point(x=max(xs) + 1, y=max(ys) + 1, is_abs=False)
-    top_left_point = get_offset_point_by_relative_point(mask_path, rel_top_left_point)
+    top_left_point = get_offset_point_by_relative_point(img_path, rel_top_left_point)
     bottom_right_point = get_offset_point_by_relative_point(
-        mask_path, rel_bottom_right_point
+        img_path, rel_bottom_right_point
     )
     box = Box(top_left_point, bottom_right_point)
     return box
@@ -118,6 +118,12 @@ def reproject(
     if sample_img_path:
         projection_code = get_projection_code(sample_img_path)
     gdal.Warp(reprojected_img_path, img_path, dstSRS=projection_code)
+
+
+def crop_by_nonzero_data_box(cropped_img_path: str, img_path: str) -> None:
+    nonzero_data_box = get_nonzero_data_box(img_path)
+    min_x, min_y, max_x, max_y = nonzero_data_box.top_left_point.x, nonzero_data_box.bottom_right_point.y, nonzero_data_box.bottom_right_point.x, nonzero_data_box.top_left_point.y
+    gdal.Warp(cropped_img_path, img_path, outputBounds=[min_x, min_y, max_x, max_y])
 
 
 def remove_background(
