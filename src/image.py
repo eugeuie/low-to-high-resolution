@@ -1,24 +1,39 @@
 import numpy as np
 import pandas as pd
-from typing import Tuple
+from typing import Tuple, Union
 from osgeo import gdal, osr
 
 
-class Point:
-    def __init__(self, x: int, y: int, is_abs: bool = True) -> None:
+class Coordinates:
+    def __init__(self, x: int, y: int) -> None:
         self.x = x
         self.y = y
-        self.is_abs = is_abs
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(x={self.x}, y={self.y})"
+
+    def as_list(self) -> list:
+        return [self.x, self.y]
+
+
+class Point(Coordinates):
+    ...
 
 
 class Box:
-    def __init__(self, top_left_point: Point, bottom_right_point: Point) -> None:
-        self.top_left_point = top_left_point
-        self.bottom_right_point = bottom_right_point
+    def __init__(self, min: Coordinates, max: Coordinates) -> None:
+        self.min = min
+        self.max = max
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(min={self.min}, max={self.max})"
 
     @property
-    def is_abs(self):
-        return self.top_left_point.is_abs and self.bottom_right_point.is_abs
+    def origin(self) -> Coordinates:
+        return Coordinates(x=self.min.x, y=self.max.y)
+
+    def as_list(self) -> list:
+        return [self.min.x, self.min.y, self.max.x, self.max.y]
 
 
 def get_projection_code(img_path: str) -> str:
@@ -34,12 +49,10 @@ def get_box(img_path: str) -> Box:
     geotransform = img.GetGeoTransform()
     x_size, y_size = img.RasterXSize, img.RasterYSize
     pixel_width, pixel_height = geotransform[1], geotransform[5]
-    top_left_point = Point(x=geotransform[0], y=geotransform[3])
-    bottom_right_point = Point(
-        x=top_left_point.x + x_size * pixel_width,
-        y=top_left_point.y + y_size * pixel_height,
-    )
-    box = Box(top_left_point, bottom_right_point)
+    min_x, max_y = geotransform[0], geotransform[3]
+    max_x = min_x + x_size * pixel_width
+    min_y = max_y + y_size * pixel_height
+    box = Box(min=Coordinates(x=min_x, y=min_y), max=Coordinates(x=max_x, y=max_y))
     return box
 
 
@@ -47,42 +60,41 @@ def get_x_y_sizes_by_box(img_path: str, box: Box) -> Tuple[int, int]:
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
     geotransform = img.GetGeoTransform()
     pixel_width, pixel_height = geotransform[1], geotransform[5]
-    img_width = abs(box.top_left_point.x - box.bottom_right_point.x)
-    img_height = abs(box.top_left_point.y - box.bottom_right_point.y)
+    img_width = abs(box.min.x - box.max.x)
+    img_height = abs(box.min.y - box.max.y)
     x_size = int(np.ceil(abs(img_width / pixel_width)))
     y_size = int(np.ceil(abs(img_height / pixel_height)))
     return x_size, y_size
 
 
-def get_relative_point(img_path: str, point: Point) -> Point:
+def get_coordinates_by_point(img_path: str, point: Point) -> Coordinates:
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
     geotransform = img.GetGeoTransform()
-    top_left_point = Point(x=geotransform[0], y=geotransform[3])
+    origin = Coordinates(x=geotransform[0], y=geotransform[3])
     pixel_width, pixel_height = geotransform[1], geotransform[5]
-    relative_point = Point(
-        x=int((point.x - top_left_point.x) / pixel_width),
-        y=int((point.y - top_left_point.y) / pixel_height),
-        is_abs=False,
+    coordinates = Coordinates(
+        x=origin.x + point.x * pixel_width,
+        y=origin.y + point.y * pixel_height,
     )
-    return relative_point
+    return coordinates
 
 
-def get_offset_point_by_relative_point(img_path: str, relative_point: Point) -> Point:
+def get_point_by_coordinates(img_path: str, coordinates: Coordinates) -> Point:
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
     geotransform = img.GetGeoTransform()
-    top_left_point = Point(x=geotransform[0], y=geotransform[3])
+    origin = Coordinates(x=geotransform[0], y=geotransform[3])
     pixel_width, pixel_height = geotransform[1], geotransform[5]
-    offset_point = Point(
-        x=top_left_point.x + relative_point.x * pixel_width,
-        y=top_left_point.y + relative_point.y * pixel_height,
+    point = Point(
+        x=int((coordinates.x - origin.x) / pixel_width),
+        y=int((coordinates.y - origin.y) / pixel_height),
     )
-    return offset_point
+    return point
 
 
-def get_offset_point(img_path: str, point: Point) -> Point:
-    relative_point = get_relative_point(img_path, point)
-    offset_point = get_offset_point_by_relative_point(img_path, relative_point)
-    return offset_point
+def get_offset_coordinates(img_path: str, coordinates: Coordinates) -> Coordinates:
+    point = get_point_by_coordinates(img_path, coordinates)
+    offset_coordinates = get_coordinates_by_point(img_path, point)
+    return offset_coordinates
 
 
 def get_nonzero_data_box(img_path: str) -> Box:
@@ -90,13 +102,11 @@ def get_nonzero_data_box(img_path: str) -> Box:
     nonzero_data_indices = np.argwhere(data != 0)
     xs = nonzero_data_indices[:, 1]
     ys = nonzero_data_indices[:, 0]
-    rel_top_left_point = Point(x=min(xs), y=min(ys), is_abs=False)
-    rel_bottom_right_point = Point(x=max(xs) + 1, y=max(ys) + 1, is_abs=False)
-    top_left_point = get_offset_point_by_relative_point(img_path, rel_top_left_point)
-    bottom_right_point = get_offset_point_by_relative_point(
-        img_path, rel_bottom_right_point
-    )
-    box = Box(top_left_point, bottom_right_point)
+    min_point = Point(min(xs), max(ys) + 1)
+    max_point = Point(max(xs) + 1, min(ys))
+    min_coordinates = get_coordinates_by_point(img_path, min_point)
+    max_coordinates = get_coordinates_by_point(img_path, max_point)
+    box = Box(min_coordinates, max_coordinates)
     return box
 
 
@@ -121,8 +131,7 @@ def reproject(
 
 
 def crop_by_box(cropped_img_path: str, img_path: str, box: Box) -> None:
-    min_x, min_y, max_x, max_y = box.top_left_point.x, box.bottom_right_point.y, box.bottom_right_point.x, box.top_left_point.y
-    gdal.Warp(cropped_img_path, img_path, outputBounds=[min_x, min_y, max_x, max_y])
+    gdal.Warp(cropped_img_path, img_path, outputBounds=box.as_list())
 
 
 def crop_by_nonzero_data_box(cropped_img_path: str, img_path: str) -> None:
@@ -146,20 +155,20 @@ def remove_background(
 
 def read_data(
     img_path: str,
-    top_left_point: Point = Point(x=0, y=0, is_abs=False),
+    origin: Union[Coordinates, Point] = Point(0, 0),
     x_size: int = 0,
     y_size: int = 0,
     flat_data: bool = True,
 ) -> np.ndarray:
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
-    if top_left_point.is_abs:
-        rel_top_left_point = get_relative_point(img_path, top_left_point)
+    if isinstance(origin, Coordinates):
+        origin_point = get_point_by_coordinates(img_path, origin)
     else:
-        rel_top_left_point = top_left_point
+        origin_point = origin
     if x_size == 0:
         x_size, y_size = img.RasterXSize, img.RasterYSize
     band = img.GetRasterBand(1)
-    data = band.ReadAsArray(rel_top_left_point.x, rel_top_left_point.y, x_size, y_size)
+    data = band.ReadAsArray(origin_point.x, origin_point.y, x_size, y_size)
     if flat_data:
         data = data.ravel()
     return data
@@ -167,7 +176,7 @@ def read_data(
 
 def read_box_data(img_path: str, box: Box, flat_data: bool = True) -> np.ndarray:
     x_size, y_size = get_x_y_sizes_by_box(img_path, box)
-    data = read_data(img_path, box.top_left_point, x_size, y_size, flat_data)
+    data = read_data(img_path, box.origin, x_size, y_size, flat_data)
     return data
 
 
@@ -175,20 +184,20 @@ def create(
     img_path: str,
     sample_img_path: str,
     data: np.ndarray,
-    top_left_point: Point = Point(x=0, y=0, is_abs=False),
+    origin: Union[Coordinates, Point] = Point(0, 0),
     x_size: int = 0,
     y_size: int = 0,
     flat_data: bool = True,
 ) -> None:
     sample_img = gdal.Open(sample_img_path, gdal.GA_ReadOnly)
 
-    if top_left_point.is_abs:
+    if isinstance(origin, Coordinates):
         fileformat = "GTiff"
         driver = gdal.GetDriverByName(fileformat)
-        offset_top_left_point = get_offset_point(sample_img_path, top_left_point)
+        offset_origin = get_offset_coordinates(sample_img_path, origin)
         geotransform = list(sample_img.GetGeoTransform())
-        geotransform[0] = offset_top_left_point.x
-        geotransform[3] = offset_top_left_point.y
+        geotransform[0] = offset_origin.x
+        geotransform[3] = offset_origin.y
 
     else:
         driver = sample_img.GetDriver()
@@ -221,18 +230,18 @@ def create_by_box(
 ) -> None:
     x_size, y_size = get_x_y_sizes_by_box(sample_img_path, box)
     create(
-        img_path, sample_img_path, data, box.top_left_point, x_size, y_size, flat_data
+        img_path, sample_img_path, data, box.origin, x_size, y_size, flat_data
     )
 
 
 def bands_to_csv(
     bands_paths: dict,
     csv_path: str,
-    top_left_point: Point = Point(x=0, y=0, is_abs=False),
+    origin: Point = Point(0, 0),
     x_size: int = 0,
     y_size: int = 0,
 ) -> None:
     data = pd.DataFrame(columns=list(bands_paths.keys()))
     for band in bands_paths:
-        data[band] = read_data(bands_paths[band], top_left_point, x_size, y_size)
+        data[band] = read_data(bands_paths[band], origin, x_size, y_size)
     data.to_csv(csv_path, index=False)
