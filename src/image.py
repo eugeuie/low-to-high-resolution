@@ -131,7 +131,11 @@ def reproject(
 
 
 def crop_by_box(cropped_img_path: str, img_path: str, box: Box) -> None:
-    gdal.Warp(cropped_img_path, img_path, outputBounds=box.as_list())
+    offset_box = Box(
+        get_offset_coordinates(img_path, box.min),
+        get_offset_coordinates(img_path, box.max),
+    )
+    gdal.Warp(cropped_img_path, img_path, outputBounds=offset_box.as_list())
 
 
 def crop_by_nonzero_data_box(cropped_img_path: str, img_path: str) -> None:

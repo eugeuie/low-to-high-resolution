@@ -54,52 +54,18 @@ def set_colors_modis_sample() -> None:
     utils.rename_temp_file(config.temp_img_path, config.modis_sample_path)
 
 
+def select_territory_from_modis_data() -> None:
+    sentinel_box = image.get_box(config.sentinel_10m_bands_input_paths["VNIR"])
+    image.crop_by_box(
+        config.modis_sample_selected_path, config.modis_sample_path, sentinel_box
+    )
+
+
 # def bands_to_csv() -> None:
 #     image.bands_to_csv(
 #         bands_paths=config.SENTINEL_SELECTED_10M_BANDS_PATHS,
 #         csv_path=config.SENTINEL_SELECTED_TABLE_DATA_PATH,
 #     )
-
-
-def select_territory_from_modis_data() -> None:
-    (
-        abs_top_left_x,
-        abs_top_left_y,
-        abs_bottom_right_x,
-        abs_bottom_right_y,
-    ) = image.get_box(config.sentinel_10m_bands_input_paths["VNIR"])
-    selected_data = image.read_data(
-        config.modis_sample_path,
-        abs_top_left_x,
-        abs_top_left_y,
-        abs_bottom_right_x,
-        abs_bottom_right_y,
-    )
-    selected_data_x_size, selected_data_y_size = image.get_x_y_sizes_by_box(
-        config.modis_sample_path,
-        abs_top_left_x,
-        abs_top_left_y,
-        abs_bottom_right_x,
-        abs_bottom_right_y,
-    )
-    image.create(
-        config.modis_sample_selected_path,
-        config.modis_sample_path,
-        selected_data,
-        abs_top_left_x,
-        abs_top_left_y,
-        selected_data_x_size,
-        selected_data_y_size,
-    )
-    image.remove_background(
-        config.modis_sample_selected_path,
-        config.temp_img_path,
-    )
-    os.remove(config.modis_sample_selected_path)
-    os.rename(config.temp_img_path, config.modis_sample_selected_path)
-    image.set_color_table(
-        config.modis_sample_selected_path, config.modis_sample_input_path
-    )
 
 
 if __name__ == "__main__":
@@ -108,7 +74,6 @@ if __name__ == "__main__":
     # crop_modis_sample()  # 30 sec
     # correct_modis_sample_labels()  # 4 min
     # set_colors_modis_sample()  # 30 sec
-
-    # select_territory_from_modis_data()  # <1 sec
+    # select_territory_from_modis_data()  # 1 sec
 
     # bands_to_csv()  # 5 min
