@@ -22,29 +22,6 @@ modis_sample_input_path = join(_modis_input_path, "lccswm2020_11.img")
 modis_map_input_path = join(_modis_input_path, "2020_map_33class.img")
 modis_classes_legend_input_path = join(metadata_dir, "33class_legend_rus.txt")
 
-modis_sample_classes = [
-    "Фон",
-    "Темнохвойный лес",
-    "Светлохвойный лес",
-    "Лиственный лес",
-    "Смешанный лес с преобладанием хвойных",
-    "Смешанный лес",
-    "Смешанный лес с преобладанием лиственных",
-    "Хвойный листопадный лес",
-    "Редины хвойные листопадные",
-    "Луга",
-    "Степь",
-    "Хвойный кустарник",
-    "Лиственный кустарник",
-    "Кустарничковая тундра",
-    "Травянистая тундра",
-    "Кустарниковая тундра",
-    "Болота",
-    "Прибрежная растительность",
-    "Открытые грунты и выходы горных пород",
-    "Водные объекты",
-]
-
 modis_sample_path = join(data_dir, "modis_sample.tif")
 modis_sample_selected_path = join(data_dir, "modis_sample_selected.tif")
 
