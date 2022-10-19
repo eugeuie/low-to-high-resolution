@@ -161,10 +161,10 @@ def read_data(
     flat_data: bool = True,
 ) -> np.ndarray:
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
-    if isinstance(origin, Coordinates):
-        origin_point = get_point_by_coordinates(img_path, origin)
-    else:
+    if isinstance(origin, Point):
         origin_point = origin
+    else:
+        origin_point = get_point_by_coordinates(img_path, origin)
     if x_size == 0:
         x_size, y_size = img.RasterXSize, img.RasterYSize
     band = img.GetRasterBand(1)
@@ -191,18 +191,18 @@ def create(
 ) -> None:
     sample_img = gdal.Open(sample_img_path, gdal.GA_ReadOnly)
 
-    if isinstance(origin, Coordinates):
+    if isinstance(origin, Point):
+        driver = sample_img.GetDriver()
+        x_size, y_size = sample_img.RasterXSize, sample_img.RasterYSize
+        geotransform = sample_img.GetGeoTransform()
+
+    else:
         fileformat = "GTiff"
         driver = gdal.GetDriverByName(fileformat)
         offset_origin = get_offset_coordinates(sample_img_path, origin)
         geotransform = list(sample_img.GetGeoTransform())
         geotransform[0] = offset_origin.x
         geotransform[3] = offset_origin.y
-
-    else:
-        driver = sample_img.GetDriver()
-        x_size, y_size = sample_img.RasterXSize, sample_img.RasterYSize
-        geotransform = sample_img.GetGeoTransform()
 
     img = driver.Create(img_path, x_size, y_size, bands=1, eType=gdal.GDT_UInt16)
     img.SetGeoTransform(geotransform)
@@ -229,9 +229,7 @@ def create_by_box(
     flat_data: bool = True,
 ) -> None:
     x_size, y_size = get_x_y_sizes_by_box(sample_img_path, box)
-    create(
-        img_path, sample_img_path, data, box.origin, x_size, y_size, flat_data
-    )
+    create(img_path, sample_img_path, data, box.origin, x_size, y_size, flat_data)
 
 
 def bands_to_csv(

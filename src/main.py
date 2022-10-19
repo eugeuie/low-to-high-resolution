@@ -1,6 +1,6 @@
 import os
 import numpy as np
-import config, utils, image
+from . import config, utils, image
 
 
 def reproject_modis_sample() -> None:
