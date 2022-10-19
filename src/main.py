@@ -61,11 +61,11 @@ def select_territory_from_modis_data() -> None:
     )
 
 
-# def bands_to_csv() -> None:
-#     image.bands_to_csv(
-#         bands_paths=config.SENTINEL_SELECTED_10M_BANDS_PATHS,
-#         csv_path=config.SENTINEL_SELECTED_TABLE_DATA_PATH,
-#     )
+def sentinel_10m_bands_to_csv() -> None:
+    image.bands_to_csv(
+        bands_paths=config.sentinel_10m_bands_input_paths,
+        csv_path=config.sentinel_table_data_path,
+    )
 
 
 if __name__ == "__main__":
@@ -75,5 +75,4 @@ if __name__ == "__main__":
     # correct_modis_sample_labels()  # 4 min
     # set_colors_modis_sample()  # 30 sec
     # select_territory_from_modis_data()  # 1 sec
-
-    # bands_to_csv()  # 5 min
+    # sentinel_10m_bands_to_csv()  # 3 min
