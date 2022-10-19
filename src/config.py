@@ -31,7 +31,8 @@ _modis_bands_filenames = {
 }
 
 modis_ru_mask_input_path = join(input_data_dir, "SubRF_Russia_mask.tif")
-modis_sample_input_path = join(input_data_dir, "lccswm2010_4.img")
+modis_sample_input_path = join(input_data_dir, "MODIS-2020", "lccswm2020_11.img")
+modis_map_input_path = join(input_data_dir, "MODIS-2020", "2020_map_23class.img")
 modis_classes_legend_input_path = join(notes_dir, "33class_legend_rus.txt")
 
 modis_sample_classes = [
