@@ -45,3 +45,5 @@ sentinel_table_data_path = join(
     data_dir,
     f"{_sentinel_dirname}_{'_'.join(_sentinel_10m_bands_filenames.keys())}.csv",
 )
+
+sentinel_selected_table_data_path = join(data_dir, "sentinel_selected.csv")

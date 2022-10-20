@@ -1,4 +1,3 @@
-import os
 import numpy as np
 from . import config, utils, image
 
@@ -68,6 +67,17 @@ def sentinel_10m_bands_to_csv() -> None:
     )
 
 
+def sentinel_10m_bands_selected_to_csv() -> None:
+    size = 1000
+
+    image.bands_to_csv(
+        bands_paths=config.sentinel_10m_bands_input_paths,
+        csv_path=config.sentinel_selected_table_data_path,
+        x_size=size,
+        y_size=size,
+    )
+
+
 if __name__ == "__main__":
     ...
     # reproject_modis_sample()  # 30 sec
@@ -76,3 +86,5 @@ if __name__ == "__main__":
     # set_colors_modis_sample()  # 30 sec
     # select_territory_from_modis_data()  # 1 sec
     # sentinel_10m_bands_to_csv()  # 3 min
+
+    # sentinel_10m_bands_selected_to_csv()  # 1 sec
