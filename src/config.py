@@ -46,4 +46,9 @@ sentinel_table_data_path = join(
     f"{_sentinel_dirname}_{'_'.join(_sentinel_10m_bands_filenames.keys())}.csv",
 )
 
+sentinel_selected_data_size = 2000
 sentinel_selected_table_data_path = join(data_dir, "sentinel_selected.csv")
+
+# Clustering
+
+kmeans_n_clusters = [3, 5, 10, 20, 30, 40, 100]

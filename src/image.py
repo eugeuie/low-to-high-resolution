@@ -197,7 +197,8 @@ def create(
 
     if isinstance(origin, Point):
         driver = sample_img.GetDriver()
-        x_size, y_size = sample_img.RasterXSize, sample_img.RasterYSize
+        if x_size == 0:
+            x_size, y_size = sample_img.RasterXSize, sample_img.RasterYSize
         geotransform = sample_img.GetGeoTransform()
 
     else:
