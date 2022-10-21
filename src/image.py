@@ -44,6 +44,13 @@ def get_projection_code(img_path: str) -> str:
     return epsg_code
 
 
+def get_pixel_x_y_sizes(img_path: str) -> Tuple[float, float]:
+    img = gdal.Open(img_path, gdal.GA_ReadOnly)
+    geotransform = img.GetGeoTransform()
+    pixel_width, pixel_height = abs(geotransform[1]), abs(geotransform[5])
+    return pixel_width, pixel_height
+
+
 def get_box(img_path: str) -> Box:
     img = gdal.Open(img_path, gdal.GA_ReadOnly)
     geotransform = img.GetGeoTransform()
@@ -54,6 +61,12 @@ def get_box(img_path: str) -> Box:
     min_y = max_y + y_size * pixel_height
     box = Box(min=Coordinates(x=min_x, y=min_y), max=Coordinates(x=max_x, y=max_y))
     return box
+
+
+def get_x_y_sizes(img_path: str) -> Tuple[int, int]:
+    img = gdal.Open(img_path, gdal.GA_ReadOnly)
+    x_size, y_size = img.RasterXSize, img.RasterYSize
+    return x_size, y_size
 
 
 def get_x_y_sizes_by_box(img_path: str, box: Box) -> Tuple[int, int]:

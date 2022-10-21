@@ -142,6 +142,71 @@ def get_unique_classes_from_modis_selected_data() -> np.ndarray:
     return np.unique(data)
 
 
+def get_kmeans_5_clusters_stats() -> None:
+    modis_x_size, modis_y_size = image.get_x_y_sizes(config.modis_sample_selected_path)
+    modis_x_size -= 1
+    modis_y_size -= 1
+
+    modis_data = image.read_data(
+        config.modis_sample_selected_path,
+        origin=image.Point(1, 1),
+        x_size=modis_x_size,
+        y_size=modis_y_size,
+        flat_data=False,
+    )
+
+    nonzero_modis_data_indices = np.argwhere(modis_data != 0)
+    x_indices = nonzero_modis_data_indices[:, 1] + 1
+    y_indices = nonzero_modis_data_indices[:, 0] + 1
+    stats = pd.DataFrame({"modis_point_x": x_indices, "modis_point_y": y_indices})
+    modis_points = [image.Point(x, y) for x, y in zip(x_indices, y_indices)]
+    coordinates = [
+        image.get_coordinates_by_point(config.modis_sample_selected_path, point)
+        for point in modis_points
+    ]
+    coordinates = np.array([coordinate.as_list() for coordinate in coordinates])
+    x_coordinates = coordinates[:, 0]
+    y_coordinates = coordinates[:, 1]
+
+    stats["modis_class"] = modis_data[modis_data != 0]
+    stats["coordinate_x"] = x_coordinates
+    stats["coordinate_y"] = y_coordinates
+
+    for n in range(config.selected_n_clusters):
+        stats[f"sentinel_class_{n}_count"] = 0
+
+    stats["sentinel_majority_class"] = pd.NA
+
+    modis_pixel_x_size, modis_pixel_y_size = image.get_pixel_x_y_sizes(
+        config.modis_sample_selected_path
+    )
+    left, top = x_coordinates[0], y_coordinates[0]
+    right = left + modis_pixel_x_size
+    bottom = top - modis_pixel_y_size
+    box = image.Box(image.Coordinates(left, bottom), image.Coordinates(right, top))
+
+    sentinel_x_size, sentinel_y_size = image.get_x_y_sizes_by_box(
+        config.selected_clustered_img_path, box
+    )
+
+    for i in range(len(x_coordinates)):
+        sentinel_data = image.read_data(
+            config.selected_clustered_img_path,
+            image.Coordinates(x_coordinates[i], y_coordinates[i]),
+            sentinel_x_size,
+            sentinel_y_size,
+        )
+
+        unique, counts = np.unique(sentinel_data, return_counts=True)
+
+        for j in range(len(unique)):
+            stats.at[i, f"sentinel_class_{unique[j]}_count"] = counts[j]
+
+        stats.at[i, "sentinel_majority_class"] = unique[counts.argmax()]
+
+    stats.to_csv(config.selected_n_clusters_stats_path, index=False)
+
+
 if __name__ == "__main__":
     ...
     # reproject_modis_sample()  # 30 sec
