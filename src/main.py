@@ -112,6 +112,7 @@ if __name__ == "__main__":
     # correct_modis_sample_labels()  # 4 min
     # set_colors_modis_sample()  # 30 sec
     # sentinel_10m_bands_to_csv()  # 3 min
+    # image.color_table_to_txt(config.modis_sample_path, config.modis_classes_color_table_path)  # 1 secF
 
     # sentinel_10m_bands_selected_to_csv()  # 1 sec
 

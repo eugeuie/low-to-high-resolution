@@ -110,6 +110,17 @@ def get_nonzero_data_box(img_path: str) -> Box:
     return box
 
 
+def color_table_to_txt(img_path: str, txt_path: str) -> None:
+    img = gdal.Open(img_path, gdal.GA_ReadOnly)
+    band = img.GetRasterBand(1)
+    color_table = band.GetRasterColorTable()
+    with open(txt_path, 'w+') as file:
+        for i in range(color_table.GetCount()):
+            entry = color_table.GetColorEntry(i)
+            str_entry = " ".join(map(str, entry))
+            file.write(f"{str_entry}\n")
+
+
 def set_color_table(img_path: str, sample_img_path: str) -> None:
     sample_img = gdal.Open(sample_img_path, gdal.GA_ReadOnly)
     sample_band = sample_img.GetRasterBand(1)
