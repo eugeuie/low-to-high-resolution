@@ -13,7 +13,7 @@ from . import config, image
 
 def run_kmeans(data_path: str, params: dict) -> None:
     data = pd.read_csv(data_path, index_col=False)
-    
+
     kmeans = KMeans()
     kmeans.set_params(**params)
     kmeans.fit(data)
@@ -22,7 +22,7 @@ def run_kmeans(data_path: str, params: dict) -> None:
     model_path = join(config.models_dir, f"{filename}.joblib")
     labels_path = join(config.data_dir, f"{filename}_labels.csv")
     img_path = join(config.data_dir, f"{filename}_labels.tif")
-    
+
     dump(kmeans, model_path)
 
     kmeans_labels = pd.Series(kmeans.labels_)
@@ -36,3 +36,20 @@ def run_kmeans(data_path: str, params: dict) -> None:
         x_size=config.sentinel_selected_data_size,
         y_size=config.sentinel_selected_data_size,
     )
+
+
+def get_kmeans_metrics(
+    data_path: str, model_path: str
+) -> list:
+    data = pd.read_csv(data_path, index_col=False)
+    kmeans = load(model_path)
+    labels = kmeans.labels_
+    silhouette_coef = silhouette_score(data, labels, metric='euclidean')
+    calinski_harabasz_index = calinski_harabasz_score(data, labels)
+    davies_bouldin_index = davies_bouldin_score(data, labels)
+    return [
+        kmeans.inertia_,
+        silhouette_coef,
+        calinski_harabasz_index,
+        davies_bouldin_index,
+    ]

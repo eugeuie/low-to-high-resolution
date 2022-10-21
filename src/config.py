@@ -6,6 +6,7 @@ base_dir = dirname(dirname(abspath(__file__)))
 data_dir = join(base_dir, "data")
 metadata_dir = join(base_dir, "metadata")
 models_dir = join(base_dir, "models")
+stats_dir = join(metadata_dir, "stats")
 
 input_data_dir = join(data_dir, "input")
 
@@ -53,3 +54,4 @@ sentinel_selected_table_data_path = join(data_dir, "sentinel_selected.csv")
 # Clustering
 
 kmeans_n_clusters = [3, 5, 10, 20, 30, 40, 100]
+kmeans_metrics_path = join(metadata_dir, "kmeans_metrics.csv")

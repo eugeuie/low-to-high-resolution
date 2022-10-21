@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import time, os
 from . import config, utils, image, clustering
 
@@ -62,12 +63,12 @@ def select_territory_from_modis_data() -> None:
         return name.startswith("KMeans") and ext == ".tif"
 
     kmeans_labels_imgs_paths = utils.filtered_listdir(f, config.data_dir)
-    kmeans_3_clusters_labels_img_path = list(filter(lambda x: "3_" in x, kmeans_labels_imgs_paths))[0]
+    kmeans_3_clusters_labels_img_path = list(
+        filter(lambda x: "3_" in x, kmeans_labels_imgs_paths)
+    )[0]
 
     box = image.get_box(kmeans_3_clusters_labels_img_path)
-    image.crop_by_box(
-        config.modis_sample_selected_path, config.modis_sample_path, box
-    )
+    image.crop_by_box(config.modis_sample_selected_path, config.modis_sample_path, box)
 
 
 def sentinel_10m_bands_to_csv() -> None:
@@ -88,16 +89,52 @@ def sentinel_10m_bands_chunk_to_csv() -> None:
 
 def run_kmeans() -> None:
     for n_clusters in config.kmeans_n_clusters:
-        params = {
-            "n_clusters": n_clusters,
-            "random_state": config.seed
-        }
+        params = {"n_clusters": n_clusters, "random_state": config.seed}
         start = time.time()
         clustering.run_kmeans(
             data_path=config.sentinel_selected_table_data_path,
             params=params,
         )
         print(f"{n_clusters} clusters in {time.time() - start:.2f} sec")
+
+
+def get_kmeans_metrics() -> None:
+    kmeans_metrics = pd.DataFrame(
+        columns=[
+            "n_clusters",
+            "inertia",
+            "silhouette_coef",
+            "calinski_harabasz_index",
+            "davies_bouldin_index",
+        ]
+    )
+
+    def f(file_path: str) -> bool:
+        basename = os.path.basename(file_path)
+        name, ext = os.path.splitext(basename)
+        return name.startswith("KMeans")
+
+    models_paths = utils.filtered_listdir(f, config.models_dir)
+
+    models_paths_sorted = []
+    for n in config.kmeans_n_clusters:
+        for model_path in models_paths:
+            basename = os.path.basename(model_path)
+            if f"{n}_" in basename:
+                models_paths_sorted.append(model_path)
+                break
+
+    for i, n in enumerate(config.kmeans_n_clusters):
+        start = time.time()
+        metrics = clustering.get_kmeans_metrics(
+            config.sentinel_selected_table_data_path, models_paths_sorted[i]
+        )
+        end = time.time()
+        kmeans_metrics.loc[i] = [n] + metrics
+
+        print(f"metrics for {n} clusters calculated in {end - start:.2f} sec")
+
+    kmeans_metrics.to_csv(config.kmeans_metrics_path, index=False)
 
 
 def get_unique_classes_from_modis_selected_data() -> np.ndarray:
