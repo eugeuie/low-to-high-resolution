@@ -1,5 +1,6 @@
 import os
 from typing import Callable
+from . import config
 
 
 def filtered_listdir(filter_function: Callable[[str], bool], dir_path: str) -> list:
@@ -25,6 +26,11 @@ def parse_classes_legend(legend_path: str) -> dict:
             key, value = line.rstrip().split(". ")
             classes[int(key)] = value
     return classes
+
+
+def get_class_name_by_index(index: int) -> str:
+    idx_classes = parse_classes_legend(config.modis_classes_legend_input_path)
+    return idx_classes[index]
 
 
 def rename_temp_file(temp_file_path: str, dst_file_path: str) -> None:
