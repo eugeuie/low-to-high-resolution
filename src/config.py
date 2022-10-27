@@ -1,33 +1,27 @@
 from os.path import dirname, abspath, join
 
+# Directory paths
 
 base_dir = dirname(dirname(abspath(__file__)))
 
 data_dir = join(base_dir, "data")
 metadata_dir = join(base_dir, "metadata")
 models_dir = join(base_dir, "models")
+
+input_dir = join(data_dir, "input")
+processing_dir = join(data_dir, "processing")
 stats_dir = join(data_dir, "stats")
+temp_dir = join(data_dir, "temp")
 
-input_data_dir = join(data_dir, "input")
+# Input data paths (lr for low resolution, hr for high resolution data)
 
-temp_img_path = join(data_dir, "temp.tif")
+lr_sample_input_path = join(input_dir, "MODIS-2020/lccswm2020_11.img")
+lr_map_input_path = join(input_dir, "2020_map_33class.img")
+lr_legend_input_path = join(input_dir, "33class_legend_rus.txt")
 
-seed = 42
+_hr_data_dirs = ["SENTINEL-2A_MSI_20201117_084357", ]
 
-# MODIS
-
-_modis_dirname = "MODIS-2020"
-_modis_input_path = join(input_data_dir, _modis_dirname)
-
-modis_sample_input_path = join(_modis_input_path, "lccswm2020_11.img")
-modis_map_input_path = join(_modis_input_path, "2020_map_33class.img")
-modis_classes_legend_input_path = join(metadata_dir, "33class_legend_rus.txt")
-modis_classes_color_table_path = join(metadata_dir, "33class_color_table.txt")
-
-modis_sample_path = join(data_dir, "modis_sample.tif")
-modis_sample_selected_path = join(data_dir, "modis_sample_selected.tif")
-
-# Sentinel
+# High resolution data
 
 _sentinel_dirname = "SENTINEL-2B_MSI_20210511_084252"
 _sentinel_10m_bands_filenames = {
@@ -37,7 +31,7 @@ _sentinel_10m_bands_filenames = {
     "VNIR": "SENTINEL-2B_MSI_20210511_084252_channel8_1.tif",
 }
 
-sentinel_input_path = join(input_data_dir, _sentinel_dirname)
+sentinel_input_path = join(input_dir, _sentinel_dirname)
 sentinel_10m_bands_input_paths = {
     name: join(sentinel_input_path, value)
     for name, value in _sentinel_10m_bands_filenames.items()
@@ -56,7 +50,13 @@ sentinel_selected_table_data_path = join(data_dir, "sentinel_selected.csv")
 kmeans_n_clusters = [3, 5, 10, 20, 30, 40, 100]
 kmeans_metrics_path = join(metadata_dir, "kmeans_metrics.csv")
 
-selected_n_clusters = 5
-selected_clustered_img_path = join(data_dir, "KMeans_5_clusters_labels.tif")
+selected_n_clusters = 30
+selected_clustered_img_path = join(data_dir, f"KMeans_{selected_n_clusters}_clusters_labels.tif")
+# selected_clustered_img_path = join(
+#     data_dir,
+#     "SENTINEL-2B_MSI_20210511_084252_kmeans_20_clusters_labels_trained_on_Blue_Red_Green_VNIR.tif",
+# )
 
-selected_n_clusters_stats_path = join(stats_dir, f"kmeans_{selected_n_clusters}_clusters_stats.csv")
+selected_n_clusters_stats_path = join(
+    stats_dir, f"kmeans_{selected_n_clusters}_clusters_stats.csv"
+)

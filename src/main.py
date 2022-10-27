@@ -68,7 +68,7 @@ def select_territory_from_modis_data() -> None:
     )[0]
 
     box = image.get_box(kmeans_3_clusters_labels_img_path)
-    image.crop_by_box(config.modis_sample_selected_path, config.modis_sample_path, box)
+    image.crop_by_box(config.modis_sample_selected_chunk_path, config.modis_sample_path, box)
 
 
 def sentinel_10m_bands_to_csv() -> None:
@@ -138,17 +138,17 @@ def get_kmeans_metrics() -> None:
 
 
 def get_unique_classes_from_modis_selected_data() -> np.ndarray:
-    data = image.read_data(config.modis_sample_selected_path)
+    data = image.read_data(config.modis_sample_selected_chunk_path)
     return np.unique(data)
 
 
-def get_kmeans_5_clusters_stats() -> None:
-    modis_x_size, modis_y_size = image.get_x_y_sizes(config.modis_sample_selected_path)
+def get_kmeans_10_clusters_stats() -> None:
+    modis_x_size, modis_y_size = image.get_x_y_sizes(config.modis_sample_selected_chunk_path)
     modis_x_size -= 1
     modis_y_size -= 1
 
     modis_data = image.read_data(
-        config.modis_sample_selected_path,
+        config.modis_sample_selected_chunk_path,
         origin=image.Point(1, 1),
         x_size=modis_x_size,
         y_size=modis_y_size,
@@ -161,7 +161,7 @@ def get_kmeans_5_clusters_stats() -> None:
     stats = pd.DataFrame({"modis_point_x": x_indices, "modis_point_y": y_indices})
     modis_points = [image.Point(x, y) for x, y in zip(x_indices, y_indices)]
     coordinates = [
-        image.get_coordinates_by_point(config.modis_sample_selected_path, point)
+        image.get_coordinates_by_point(config.modis_sample_selected_chunk_path, point)
         for point in modis_points
     ]
     coordinates = np.array([coordinate.as_list() for coordinate in coordinates])
@@ -178,7 +178,7 @@ def get_kmeans_5_clusters_stats() -> None:
     stats["sentinel_majority_class"] = pd.NA
 
     modis_pixel_x_size, modis_pixel_y_size = image.get_pixel_x_y_sizes(
-        config.modis_sample_selected_path
+        config.modis_sample_selected_chunk_path
     )
     left, top = x_coordinates[0], y_coordinates[0]
     right = left + modis_pixel_x_size
